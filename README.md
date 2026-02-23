@@ -11,6 +11,37 @@ In this homework, we'll use Bruin to build a complete data pipeline, from ingest
 
 After completing the setup, you should have a working NYC taxi data pipeline.
 
+## Project Architecture: 
+
+05_data_platforms/
+└── bruin/
+    ├── .bruin.yml              # Global config: connections, environments (GCP, BigQuery, etc.)
+    ├── .gitignore
+    ├── README.md
+    ├── logs/                   # Auto-generated run logs (not tracked in Git)
+    └── zoomcamp/
+        └── pipeline/
+            ├── pipeline.yml    # Pipeline definition: name, schedule, assets
+            ├── README.md
+            └── assets/
+                ├── ingestion_hw5/          # Layer 1 - Raw data ingestion
+                │   ├── trips.py                # Fetches raw trip data from source
+                │   ├── payment_lookup.csv      # Static lookup table
+                │   ├── payment_lookup.asset.yml
+                │   ├── taxi_zone_lookup.csv    # Static lookup table
+                │   ├── taxi_zone_lookup.asset.yml
+                │   └── requirements.txt        # Python dependencies
+                │
+                ├── staging_hw5/            # Layer 2 - Clean & transform
+                │   └── trips.sql               # Transforms raw → structured data
+                │
+                └── reports_hw5/            # Layer 3 - Aggregation & reporting
+                    └── trips_report.sql        # Final business-ready metrics
+
+![alt text](/pictures/architecture.png)
+
+[Source] → ingestion_hw5/ → staging_hw5/ → reports_hw5/ → BigQuery (GCP)
+
 <b> Question 1. Bruin Pipeline Structure </b>
 
 In a Bruin project, what are the required files/directories?
