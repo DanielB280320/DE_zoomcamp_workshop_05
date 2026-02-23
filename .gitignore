@@ -1,0 +1,9 @@
+.bruin.yml
+logs/runs
+logs/*.log
+__pycache__/
+*.py[cod]
+logs/queries
+
+# Ignore all JSON files
+*.json

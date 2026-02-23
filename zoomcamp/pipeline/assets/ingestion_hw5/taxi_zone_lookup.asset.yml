@@ -1,0 +1,29 @@
+name: ingestion_hw5.taxi_zone_lookup
+type: bq.seed
+parameters:
+  #relative path to the CSV file from this .asset.yml file
+  path: taxi_zone_lookup.csv
+
+columns:
+  - name: locationid
+    type: integer
+    description: Unique identifier for each taxi zone. This is the primary key for this lookup table.
+    primary_key: true
+    checks:
+      - name: not_null
+      - name: unique
+  - name: borough
+    type: string
+    description: The borough where the taxi zone is located (e.g., Manhattan, Brooklyn).
+    checks:
+      - name: not_null
+  - name: zone
+    type: string  
+    description: The specific taxi zone name (e.g., "Midtown", "JFK Airport").
+    checks:
+      - name: not_null
+  - name: service_zone
+    type: string
+    description: The service zone classification for the taxi zone (e.g., "Yellow Zone", "Green Zone").
+    checks:
+      - name: not_null
