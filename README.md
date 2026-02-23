@@ -44,6 +44,7 @@ After completing the setup, you should have a working NYC taxi data pipeline.
 
 [Source] → ingestion_hw5/ → staging_hw5/ → reports_hw5/ → BigQuery (GCP)
 
+
 <b> Question 1. Bruin Pipeline Structure </b>
 
 In a Bruin project, what are the required files/directories?
