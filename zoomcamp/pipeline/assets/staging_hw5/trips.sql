@@ -17,76 +17,70 @@ depends:
 columns:
   - name: vendor_id
     type: INTEGER
-    Description: The ID of the taxi vendor.
     checks:
-      - name: not_null
-  - name: tpep_pickup_datetime
+      - name: accepted_values
+        value:
+          - "1"
+          - "2"
+          - "4"
+  - name: pickup_datetime
     type: TIMESTAMP
-    Description: The date and time when the trip started.
     checks:
-      - name: not_null
-  - name: tpep_dropoff_datetime
+  - name: dropoff_datetime
     type: TIMESTAMP
-    description: The date and time when the trip ended.
-    checks:
-      - name: not_null
+  - name: trip_duration_minutes
+    type: INTEGER
+    checks: 
+      - name: non_negative
   - name: passenger_count
-    type: NUMERIC
-    description: The number of passengers in the trip.
+    type: FLOAT
   - name: trip_distance
-    type: NUMERIC
-    description: The distance of the trip in miles.
+    type: FLOAT
   - name: ratecode_id
-    type: NUMERIC
-    description: The ID of the rate code for the trip.
+    type: FLOAT
   - name: store_and_fwd_flag
     type: STRING
   - name: pu_location_id
     type: INTEGER
-    description: The ID of the pickup location (taxi zone).
-    checks:
-      - name: not_null
+  - name: pickup_zone
+    type: STRING
+  - name: pickup_borough
+    type: STRING
   - name: do_location_id
     type: INTEGER
-    description: The ID of the dropoff location (taxi zone).
-    checks:
-      - name: not_null
+  - name: dropoff_zone
+    type: STRING
+  - name: dropoff_borough
+    type: STRING
   - name: payment_type
     type: INTEGER
-    description: The ID of the payment type for the trip.
+  - name: payment_type_name
+    type: STRING
   - name: fare_amount
-    type: NUMERIC
-    description: The fare amount for the trip.
+    type: FLOAT
   - name: extra
-    type: NUMERIC
-    description: The extra charges for the trip (e.g., airport surcharge).
+    type: FLOAT
   - name: mta_tax
-    type: NUMERIC
-    description: The MTA tax for the trip.
+    type: FLOAT
   - name: tip_amount
-    type: NUMERIC
-    description: The tip amount for the trip.
+    type: FLOAT
   - name: tolls_amount
-    type: NUMERIC
-    description: The tolls amount for the trip.
+    type: FLOAT
   - name: improvement_surcharge
-    type: NUMERIC
-    description: The improvement surcharge for the trip.
+    type: FLOAT
   - name: total_amount
-    type: NUMERIC
-    description: The total amount for the trip (fare + extra + tax + tip + tolls + surcharge).
+    type: FLOAT
+    checks:
+      - name: non_negative
+      - name: not_null
   - name: congestion_surcharge
-    type: NUMERIC
-    description: The congestion surcharge for the trip.
+    type: FLOAT
   - name: airport_fee
-    type: NUMERIC
-    description: The airport fee for the trip.
+    type: FLOAT
   - name: cbd_congestion_fee
-    type: NUMERIC
-    description: The CBD congestion fee for the trip.
+    type: FLOAT
   - name: extracted_at
     type: TIMESTAMP
-    description: The timestamp when the trip record was extracted from the source.
 
 @bruin */
 
@@ -192,7 +186,4 @@ LEFT JOIN ingestion_hw5.taxi_zone_lookup do
 
 SELECT * 
 FROM enriched_trips
-
-
-
-
+;

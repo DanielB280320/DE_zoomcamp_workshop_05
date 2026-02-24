@@ -12,62 +12,6 @@ materialization:
 depends:
   - staging_hw5.trips
 
-columns:
-  - name: vendor_id
-    type: INTEGER
-  - name: pickup_datetime
-    type: TIMESTAMP
-  - name: dropoff_datetime
-    type: TIMESTAMP
-  - name: trip_duration_minutes
-    type: INTEGER
-  - name: passenger_count
-    type: FLOAT
-  - name: trip_distance
-    type: FLOAT
-  - name: ratecode_id
-    type: FLOAT
-  - name: store_and_fwd_flag
-    type: STRING
-  - name: pu_location_id
-    type: INTEGER
-  - name: pickup_zone
-    type: STRING
-  - name: pickup_borough
-    type: STRING
-  - name: do_location_id
-    type: INTEGER
-  - name: dropoff_zone
-    type: STRING
-  - name: dropoff_borough
-    type: STRING
-  - name: payment_type
-    type: INTEGER
-  - name: payment_type_name
-    type: STRING
-  - name: fare_amount
-    type: FLOAT
-  - name: extra
-    type: FLOAT
-  - name: mta_tax
-    type: FLOAT
-  - name: tip_amount
-    type: FLOAT
-  - name: tolls_amount
-    type: FLOAT
-  - name: improvement_surcharge
-    type: FLOAT
-  - name: total_amount
-    type: FLOAT
-  - name: congestion_surcharge
-    type: FLOAT
-  - name: airport_fee
-    type: FLOAT
-  - name: cbd_congestion_fee
-    type: FLOAT
-  - name: extracted_at
-    type: TIMESTAMP
-
 @bruin */
 
 -- Purpose of reports:
@@ -103,3 +47,5 @@ GROUP BY
   DATE_TRUNC(pickup_datetime, MONTH),
   pickup_zone
 ORDER BY pickup_month DESC
+
+;

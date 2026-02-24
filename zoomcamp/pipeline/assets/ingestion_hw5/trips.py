@@ -80,107 +80,83 @@ def materialize():
     Fetches data from: https://d37ci6vzurychx.cloudfront.net/trip-data/{taxi_type}_tripdata_{year}-{month}.parquet
     Returns DataFrame for Bruin to load into destination.
     """
-    # Get ingestion window from Bruin environment
+
+    def generate_year_months(start_date, end_date):
+        year_months = []
+        current = datetime.strptime(start_date, "%Y-%m-%d").replace(day=1)
+        end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+        while current <= end_datetime:
+            year_months.append((current.year, current.month))
+            current = current.replace(month=1, year=current.year + 1) if current.month == 12 else current.replace(month=current.month + 1)
+        return year_months
+
+    def fetch_taxi_data(taxi_type, year, month, start_date, end_date):
+        url = f"https://d37ci6vzurychx.cloudfront.net/trip-data/{taxi_type}_tripdata_{year:04d}-{month:02d}.parquet"
+        print(f"Downloading {taxi_type} {year}-{month:02d}", end=" ")
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        df = pd.read_parquet(BytesIO(response.content))
+        print(f"({len(df)} rows before filtering)")
+
+        if "pickup_datetime" in df.columns:
+            df["pickup_datetime"] = pd.to_datetime(df["pickup_datetime"])
+            filter_start = datetime.strptime(start_date, "%Y-%m-%d")
+            filter_end = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+            df = df[(df["pickup_datetime"] >= filter_start) & (df["pickup_datetime"] < filter_end)]
+
+        print(f"After date filtering: {len(df)} rows")
+        return df if len(df) > 0 else None
+
+    # Load configuration
+    print("Loading configuration")
     start_date = os.getenv("BRUIN_START_DATE", "2025-01-01")
     end_date = os.getenv("BRUIN_END_DATE", "2025-01-31")
-    
-    # Get taxi types from pipeline variables
+    extraction_timestamp = datetime.utcnow()
     bruin_vars = json.loads(os.getenv("BRUIN_VARS", "{}"))
     taxi_types = bruin_vars.get("taxi_types", ["yellow"])
-    
-    extracted_at = datetime.utcnow()
-    
-    print(f"[INGESTION] Date range: {start_date} to {end_date} | Types: {taxi_types}")
-    
-    # Fetch and concatenate data for all taxi types
-    dfs = [
-        _fetch_data(taxi_type, start_date, end_date, extracted_at)
-        for taxi_type in taxi_types
-    ]
-    dfs = [df for df in dfs if df is not None and len(df) > 0]
-    
-    if dfs:
-        result = pd.concat(dfs, ignore_index=True)
-        print(f"[SUCCESS] Ingested {len(result)} rows")
-        return result
-    else:
-        print("[WARNING] No data found. Returning empty DataFrame.")
-        return pd.DataFrame(columns=[
-            "vendor_id", "pickup_datetime", "dropoff_datetime", "passenger_count",
-            "trip_distance", "rate_code_id", "store_and_fwd_flag", "pu_location_id",
-            "do_location_id", "payment_type", "fare_amount", "extra", "mta_tax",
-            "tip_amount", "tolls_amount", "total_amount", "extracted_at"
-        ])
+    print(f" - Date range: {start_date} to {end_date}")
+    print(f" - Taxi types: {taxi_types}")
+    print(f" - Extraction timestamp: {extraction_timestamp}")
 
+    # Generate year-month range
+    print("\n Generating year-month list")
+    year_months = generate_year_months(start_date, end_date)
+    print(f"- Generated {len(year_months)} month(s): {year_months}")
 
-def _fetch_data(taxi_type: str, start_date: str, end_date: str, extracted_at: datetime) -> pd.DataFrame:
-    """Fetch taxi data from NYC TLC official dataset for a specific type and date range."""
-    start = datetime.strptime(start_date, "%Y-%m-%d")
-    end = datetime.strptime(end_date, "%Y-%m-%d")
-    
-    # Generate list of (year, month) tuples for the date range
-    year_months = _get_year_months(start, end)
-    print(f"[{taxi_type.upper()}] Fetching {len(year_months)} month(s)...")
-    
-    dfs = []
-    for year, month in year_months:
-        try:
-            url = f"https://d37ci6vzurychx.cloudfront.net/trip-data/{taxi_type}_tripdata_{year:04d}-{month:02d}.parquet"
-            df = _download_parquet(url)
-            
-            if df is not None:
-                # Filter to date range
-                df = _filter_by_date_range(df, start_date, end_date)
-                if len(df) > 0:
-                    dfs.append(df)
-                    print(f"  {year}-{month:02d}: {len(df)} rows")
-                    
-        except Exception as e:
-            print(f"  [WARNING] {year}-{month:02d}: {str(e)}")
-    
-    if dfs:
-        result = pd.concat(dfs, ignore_index=True)
-        result["extracted_at"] = extracted_at
-        return result
-    else:
-        return None
+    # Download and process data for all taxi types
+    print("\n Downloading and processing data")
+    all_dataframes = []
+    for taxi_type in taxi_types:
+        print(f"\n Taxi type: {taxi_type}")
+        taxi_type_dataframes = []
+        for year, month in year_months:
+            try:
+                df = fetch_taxi_data(taxi_type, year, month, start_date, end_date)
+                if df is not None:
+                    taxi_type_dataframes.append(df)
+            except Exception as e:
+                print(f"Error: {str(e)}")
 
-
-def _get_year_months(start: datetime, end: datetime) -> list:
-    """Generate list of (year, month) tuples for all months in date range."""
-    year_months = []
-    current = start.replace(day=1)
-    
-    while current <= end:
-        year_months.append((current.year, current.month))
-        # Move to next month
-        if current.month == 12:
-            current = current.replace(year=current.year + 1, month=1)
+        if taxi_type_dataframes:
+            taxi_type_df = pd.concat(taxi_type_dataframes, ignore_index=True)
+            taxi_type_df["extracted_at"] = extraction_timestamp
+            all_dataframes.append(taxi_type_df)
+            print(f"Combined {taxi_type}: {len(taxi_type_df)} rows")
         else:
-            current = current.replace(month=current.month + 1)
-    
-    return year_months
+            print(f"No data found for {taxi_type}")
 
+    # Validate and return final result
+    print("\n Finalizing results")
+    valid_dataframes = [df for df in all_dataframes if df is not None and len(df) > 0]
+    if valid_dataframes:
+        final_result = pd.concat(valid_dataframes, ignore_index=True)
+        print(f"Total rows ingested: {len(final_result)}")
+        return final_result
 
-def _download_parquet(url: str) -> pd.DataFrame:
-    """Download and parse parquet file from URL."""
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
-    
-    # Read parquet from BytesIO
-    df = pd.read_parquet(BytesIO(response.content))
-    return df
-
-
-def _filter_by_date_range(df: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
-    """Filter DataFrame by pickup_datetime range."""
-    # Ensure pickup_datetime is datetime
-    if "pickup_datetime" in df.columns:
-        df["pickup_datetime"] = pd.to_datetime(df["pickup_datetime"])
-        
-        start = datetime.strptime(start_date, "%Y-%m-%d")
-        end = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)  # Include entire end day
-        
-        df = df[(df["pickup_datetime"] >= start) & (df["pickup_datetime"] < end)]
-    
-    return df
+    print("No data found")
+    return pd.DataFrame(columns=[
+        "vendor_id", "pickup_datetime", "dropoff_datetime", "passenger_count",
+        "trip_distance", "rate_code_id", "store_and_fwd_flag", "pu_location_id",
+        "do_location_id", "payment_type", "fare_amount", "extra", "mta_tax",
+        "tip_amount", "tolls_amount", "total_amount", "extracted_at"
+    ])
