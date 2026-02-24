@@ -16,13 +16,13 @@ After completing the setup, you should have a working NYC taxi data pipeline.
 ```
 05_data_platforms/
 └── bruin/
-    ├── .bruin.yml              # Global config: connections, environments (GCP, BigQuery, etc.)
+    ├── .bruin.yml              # Global config: connections, environments (GCP, BigQuery)
     ├── .gitignore
     ├── README.md
     ├── logs/                   # Auto-generated run logs (not tracked in Git)
     └── zoomcamp/
         └── pipeline/
-            ├── pipeline.yml    # Pipeline definition: name, schedule, assets
+            ├── pipeline.yml    # Pipeline definition: name, schedule, default connections, custom variables. 
             ├── README.md
             └── assets/
                 ├── ingestion_hw5/              # Layer 1 - Raw data ingestion
@@ -34,10 +34,10 @@ After completing the setup, you should have a working NYC taxi data pipeline.
                 │   └── requirements.txt         # Python dependencies
                 │
                 ├── staging_hw5/                # Layer 2 - Clean & transform
-                │   └── trips.sql               # Transforms raw → structured data
+                │   └── trips.sql               # Transforms raw → cleaned and enriched data
                 │
                 └── reports_hw5/                # Layer 3 - Aggregation & reporting
-                    └── trips_report.sql         # Final business-ready metrics
+                    └── trips_report.sql         # Final business-ready data
 ```
 
 ![alt text](/pictures/architecture.png)

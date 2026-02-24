@@ -12,6 +12,7 @@ materialization:
 depends:
   - staging_hw5.trips
 
+
 @bruin */
 
 -- Purpose of reports:
@@ -47,5 +48,4 @@ GROUP BY
   DATE_TRUNC(pickup_datetime, MONTH),
   pickup_zone
 ORDER BY pickup_month DESC
-
 ;
