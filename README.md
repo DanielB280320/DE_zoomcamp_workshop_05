@@ -40,7 +40,7 @@ After completing the setup, you should have a working NYC taxi data pipeline.
                     └── trips_report.sql         # Final business-ready data
 ```
 
-[alt text](./pictures/Architecture.png)
+[alt text](pictures/Architecture.png)
 
 [Source] → ingestion_hw5/ → staging_hw5/ → reports_hw5/ → BigQuery (GCP)
 
